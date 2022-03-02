@@ -8,9 +8,9 @@ RUN yum install -y tar gzip libtool make autoconf automake git
 
 # Download helm
 ENV HELM_VERSION 3.8.0
-RUN curl -o /tmp/helm-v3.8.0-linux-amd64.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
-  && tar -zxvf /tmp/helm-v3.8.0-linux-amd64.tar.gz -C /tmp \
-  && mv /tmp/linux-amd64/helm /usr/local/bin/helm
+RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
+  && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
+  && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download jq
 ENV JQ_VERSION 1.6
@@ -61,3 +61,4 @@ RUN echo "PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
+CMD [ "bash", "-il" ]

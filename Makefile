@@ -4,10 +4,16 @@
 #
 
 aws-tools: build-docker-image
-  # Run the cli.
 	docker run --rm -v ${PWD}:/mnt \
-	--hostname "SPARK-AWS-TOOLS-TEST" --name spark-aws-tools \
-	-it sparkfabrik/aws-tools:latest bash -il
+		--hostname "SPARK-AWS-TOOLS-TEST" --name spark-aws-tools \
+		-it sparkfabrik/aws-tools:latest
 
 build-docker-image:
 	docker buildx build --load -t sparkfabrik/aws-tools:latest -f Dockerfile .
+
+# The following jobs are intended for test purpose only
+build-docker-image-amd64:
+	docker buildx build --platform "linux/amd64" -t sparkfabrik/aws-tools:latest -f Dockerfile .
+
+build-docker-image-arm64:
+	docker buildx build --platform "linux/arm64" -t sparkfabrik/aws-tools:latest -f Dockerfile .
