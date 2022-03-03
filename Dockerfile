@@ -36,6 +36,8 @@ RUN yum clean all \
 
 FROM amazon/aws-cli:2.4.21
 
+LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-aws-tools
+
 # Build target arch passed by BuildKit
 ARG TARGETARCH
 
