@@ -1,4 +1,4 @@
-FROM amazon/aws-cli:2.4.21 as build
+FROM amazon/aws-cli:2.5.7 as build
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
@@ -7,10 +7,16 @@ ARG TARGETARCH
 RUN yum install -y tar gzip libtool make autoconf automake git
 
 # Download helm
-ENV HELM_VERSION 3.8.0
+ENV HELM_VERSION 3.8.2
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
+
+# Download stern
+ENV STERN_VERSION 1.21.0
+RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
+  && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
+  && mv /tmp/stern /usr/local/bin/stern
 
 # Download jq
 ENV JQ_VERSION 1.6
@@ -34,7 +40,7 @@ RUN cd /tmp/jq-jq-${JQ_VERSION} \
 RUN yum clean all \
   && rm -rf /var/cache/yum
 
-FROM amazon/aws-cli:2.4.21
+FROM amazon/aws-cli:2.5.7
 
 LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-aws-tools
 
@@ -45,9 +51,17 @@ ARG TARGETARCH
 RUN curl -o /usr/local/bin/kubectl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${TARGETARCH}/kubectl" \
   && chmod +x /usr/local/bin/kubectl
 
+# Download kubens
+RUN curl -o /usr/local/bin/kubens -LO "https://raw.githubusercontent.com/ahmetb/kubectx/master/kubens" \
+  && chmod +x /usr/local/bin/kubens
+
 # Copy helm from previous stage
 COPY --from=build /usr/local/bin/helm /usr/local/bin/helm
 RUN chmod +x /usr/local/bin/helm
+
+# Copy stern from previous stage
+COPY --from=build /usr/local/bin/stern /usr/local/bin/stern
+RUN chmod +x /usr/local/bin/stern
 
 # Copy compiled jq from previous stage
 COPY --from=build /usr/local/bin/jq /usr/local/bin/jq
