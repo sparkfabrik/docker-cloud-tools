@@ -4,8 +4,10 @@
 #
 
 aws-tools: build-docker-image
-	docker run --rm -v ${PWD}:/mnt \
+	@touch .env
+	@docker run --rm -v ${PWD}:/mnt \
 		--hostname "SPARK-AWS-TOOLS-TEST" --name spark-aws-tools \
+		--env-file .env \
 		-it sparkfabrik/aws-tools:latest
 
 build-docker-image:
