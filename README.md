@@ -4,6 +4,7 @@
 
 ```bash
 docker run --rm -it \
+    -eCLUSTER_TYPE=EKS \
     -eAWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID> \
     -eAWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY> \
     -eAWS_DEFAULT_REGION=<AWS_DEFAULT_REGION> \
@@ -11,6 +12,31 @@ docker run --rm -it \
 ```
 
 You can also use the `.env.template` file as a reference to create a `.env`.
+
+## Using GCP secret
+
+If you store the AWS access information in a GCP secret, you can use directly this one to automatically configure the docker image. The secret payload must follow this structure:
+
+```json
+{
+  "AWS_ACCESS_KEY_ID": <AWS_ACCESS_KEY_ID>,
+  "AWS_SECRET_ACCESS_KEY": <AWS_SECRET_ACCESS_KEY>,
+  "AWS_DEFAULT_REGION": <AWS_DEFAULT_REGION>,
+  "AVAILABLE_NAMESPACES": [ <The available namsespace as a list of string> ],
+}
+```
+
+When yuo use this configuration you can run the container as follow:
+
+```bash
+docker run --rm -it \
+    -v ~/.config/gcloud:/root/.config/gcloud \
+    -eCLUSTER_TYPE=EKS \
+    -eSECRET_PROJECT=<GCP Project id which hosts the secret>
+    -eSECRET_NAME=<GCP secret name>
+    -eSECRET_VER=<GCP secret version>
+  ghcr.io/sparkfabrik/cloud-tools:latest
+```
 
 ## Tools
 
@@ -28,13 +54,13 @@ In the final docker image, you will find also the following tools:
 - helm
 - stern
 
-### GKE helper
+### GKE helper (CLUSTER_TYPE: GKE)
 
 If you have configured your gcloud authentication and you user can access to one cluster, the first GKE cluster listed using `gcloud container clusters list` will be automatically configured as default in the `kubeconfig` file.
 
 If you need to configure another cluster you can use the `gcloud container clusters list` command to see the list of all the available clusters. Use `gcloud container clusters get-credentials "<put here the cluster name>" --project "${GCP_PROJECT}" --zone "<put here the GCP project name>"` to update the configuration.
 
-### EKS helper
+### EKS helper (CLUSTER_TYPE: EKS)
 
 If the IAM user configured to run inside the docker image has access to an EKS cluster, the first EKS cluster listed using the command `aws eks list-clusters` will be automatically configured as default in the `kubeconfig` file.
 

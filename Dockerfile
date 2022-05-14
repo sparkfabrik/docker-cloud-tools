@@ -53,7 +53,7 @@ ARG TARGETARCH
 RUN apt-get update \
   && apt-get upgrade -y \
   && apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
-  unzip vim
+  unzip vim bash bash-completion
 
 # Install aws-cli (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 RUN curl -o "/tmp/awscliv2.zip" -L0  "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
@@ -89,9 +89,14 @@ RUN chmod +x /usr/local/bin/kubens
 ENV HISTFILE=/root/dotfiles/.bash_history
 RUN mkdir mkdir -p /root/dotfiles
 
+# Prompter function to build the bash prompt with additional information
+ENV PROMPT_COMMAND=prompter
+COPY scripts/prompter.sh /etc/profile.d/prompter.sh
+RUN chmod +x /etc/profile.d/prompter.sh
+
 # Final settings
-RUN echo "PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '" >> /etc/profile \
-  && echo "source <(kubectl completion bash)" >> /etc/profile \
+# RUN echo "PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '" >> /etc/profile \
+RUN echo "source <(kubectl completion bash)" >> /etc/profile \
   && echo "alias k=\"kubectl\"" >> /etc/profile \
   && echo "source <(helm completion bash)" >> /etc/profile
 

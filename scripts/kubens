@@ -5,11 +5,14 @@ if [ -z "${1}" ]; then
     echo -e "\e[1mThe available namespaces are:\e[0m"
     echo "${AVAILABLE_NAMESPACES}"
   fi
+elif [ "${1}" = "-u" ]; then
+  kubectl config set-context --current --namespace=
 else
-  if ! echo "${AVAILABLE_NAMESPACES}" | grep -qi "${1}"; then
+  if ! echo "${AVAILABLE_NAMESPACES}" | grep -qE "(^| )${1}( |$)"; then
     echo -e "\e[1mThe specified namespace is invalid. The available namespaces are:\e[0m"
     echo "${AVAILABLE_NAMESPACES}"
     exit 0
   fi
-  kubectl config set-context --current --namespace="${1}"
+  export CURRENT_NAMESPACE="${1}"
+  kubectl config set-context --current --namespace="${CURRENT_NAMESPACE}"
 fi

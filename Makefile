@@ -1,4 +1,4 @@
-# You can test the precunfigured command line enviroment running:
+# You can test the preconfigured command line enviroment running:
 #
 # make cloud-tools
 #
@@ -8,7 +8,10 @@ IMAGE_TAG ?= latest
 
 cloud-tools: build-docker-image
 	@touch .env
-	@docker run --rm -v ${PWD}:/mnt \
+	@docker run --rm \
+		-w /mnt \
+		-v ${PWD}:/mnt \
+		-v ~/.config/gcloud:/root/.config/gcloud \
 		--hostname "SPARK-CLOUD-TOOLS-LOCAL" --name spark-cloud-tools-local \
 		--env-file .env \
 		-it $(IMAGE_NAME):$(IMAGE_TAG)

@@ -12,6 +12,13 @@ if [ "${CLUSTER_TYPE}" = "GKE" ]; then
       gcloud container clusters get-credentials "${CLUSTER_NAME}" --project "${GCP_PROJECT}" --zone "${CLUSTER_LOCATION}"
       EXIT_CONF_KUBECONFIG=$?
       if [ "${EXIT_CONF_KUBECONFIG}" -eq 0 ]; then
+        if [ -n "${SECRET_PROJECT}" ] && [ -n "${SECRET_NAME}" ] && [ "${SECRET_VER}" -gt 0 ]; then
+          # Try to get available namespaces
+          SECRET_CONTENT=$(gcloud --project="${SECRET_PROJECT}" secrets versions access "${SECRET_VER}" --secret="${SECRET_NAME}")
+          AVAILABLE_NAMESPACES=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AVAILABLE_NAMESPACES:-}" 'if .AVAILABLE_NAMESPACES then .AVAILABLE_NAMESPACES | join(" ") else $IFNULL end')
+          export AVAILABLE_NAMESPACES
+          echo "export AVAILABLE_NAMESPACES=\"${AVAILABLE_NAMESPACES}\"" >> "${ADDITIONAL_ENV_FILE}"
+        fi
         echo -e "\e[32m\e[1mDone!\e[0m"
       else
         echo -e "\e[93mNo clusters found\e[0m"
@@ -25,6 +32,23 @@ if [ "${CLUSTER_TYPE}" = "GKE" ]; then
 fi
 
 if [ "${CLUSTER_TYPE}" = "EKS" ]; then
+  if [ -n "${SECRET_PROJECT}" ] && [ -n "${SECRET_NAME}" ] && [ "${SECRET_VER}" -gt 0 ]; then
+    # Try to get cluster access information from the given secret
+    SECRET_CONTENT=$(gcloud --project="${SECRET_PROJECT}" secrets versions access "${SECRET_VER}" --secret="${SECRET_NAME}")
+    AWS_ACCESS_KEY_ID=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AWS_ACCESS_KEY_ID:-}" 'if .AWS_ACCESS_KEY_ID then .AWS_ACCESS_KEY_ID else $IFNULL end')
+    AWS_SECRET_ACCESS_KEY=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AWS_SECRET_ACCESS_KEY:-}" 'if .AWS_SECRET_ACCESS_KEY then .AWS_SECRET_ACCESS_KEY else $IFNULL end')
+    AWS_DEFAULT_REGION=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AWS_DEFAULT_REGION:-}" 'if .AWS_DEFAULT_REGION then .AWS_DEFAULT_REGION else $IFNULL end')
+    AVAILABLE_NAMESPACES=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AVAILABLE_NAMESPACES:-}" 'if .AVAILABLE_NAMESPACES then .AVAILABLE_NAMESPACES | join(" ") else $IFNULL end')
+    export AWS_ACCESS_KEY_ID
+    export AWS_SECRET_ACCESS_KEY
+    export AWS_DEFAULT_REGION
+    export AVAILABLE_NAMESPACES
+    { echo "export AWS_ACCESS_KEY_ID=\"${AWS_ACCESS_KEY_ID}\""; \
+    echo "export AWS_SECRET_ACCESS_KEY=\"${AWS_SECRET_ACCESS_KEY}\""; \
+    echo "export AWS_DEFAULT_REGION=\"${AWS_DEFAULT_REGION}\""; \
+    echo "export AVAILABLE_NAMESPACES=\"${AVAILABLE_NAMESPACES}\""; } >> "${ADDITIONAL_ENV_FILE}"
+  fi
+
   if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ] && [ -n "${AWS_DEFAULT_REGION}" ]; then
     echo -e "\e[32m\e[1mTry to configure EKS cluster ...\e[0m"
     CLUSTER_NAME="$(aws eks list-clusters | jq --raw-output '.clusters[0]')"
