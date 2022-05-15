@@ -55,6 +55,10 @@ RUN apt-get update \
   && apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
   unzip vim bash bash-completion
 
+# Install gke-gcloud-auth-plugin (https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke)
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=true
+RUN apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false google-cloud-sdk-gke-gcloud-auth-plugin
+
 # Install aws-cli (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 RUN curl -o "/tmp/awscliv2.zip" -L0  "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
   && unzip /tmp/awscliv2.zip -d /tmp \
@@ -95,10 +99,11 @@ COPY scripts/prompter.sh /etc/profile.d/prompter.sh
 RUN chmod +x /etc/profile.d/prompter.sh
 
 # Final settings
-# RUN echo "PS1='\[\033[1;36m\]\u\[\033[1;31m\]@\[\033[1;32m\]\h:\[\033[1;35m\]\w\[\033[1;31m\]\$\[\033[0m\] '" >> /etc/profile \
-RUN echo "source <(kubectl completion bash)" >> /etc/profile \
-  && echo "alias k=\"kubectl\"" >> /etc/profile \
-  && echo "source <(helm completion bash)" >> /etc/profile
+RUN echo "alias k=\"kubectl\"" >> /etc/profile \
+  && echo "complete -C '/usr/local/bin/aws_completer' aws" >> /etc/profile \
+  && echo "source <(kubectl completion bash)" >> /etc/profile \
+  && echo "source <(helm completion bash)" >> /etc/profile \
+  && echo "source <(stern --completion bash)" >> /etc/profile
 
 # Cleanup unwanted files to keep the image light
 RUN apt-get clean -q && apt-get autoremove --purge \

@@ -10,7 +10,7 @@ cloud-tools: build-docker-image
 	@touch .env
 	@docker run --rm \
 		-w /mnt \
-		-v ${PWD}:/mnt \
+		-v ${PWD}/dotfiles:/root/dotfiles \
 		-v ~/.config/gcloud:/root/.config/gcloud \
 		--hostname "SPARK-CLOUD-TOOLS-LOCAL" --name spark-cloud-tools-local \
 		--env-file .env \

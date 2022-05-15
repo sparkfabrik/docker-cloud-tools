@@ -1,27 +1,66 @@
 #!/bin/bash
 
+# Load the additional environment variables
+# shellcheck disable=SC1090
+. "${ADDITIONAL_ENV_FILE}"
+
+# Start the configuration process
+CLUSTER_CONFIGURED=0
+
+# Get secret content if SECRET_ vars are configured
+SECRET_CONTENT=""
+readSecret() {
+  # Read the secret only the first time
+  if [ -z "${SECRET_CONTENT}" ] && [ -n "${SECRET_PROJECT}" ] && [ -n "${SECRET_NAME}" ]; then
+    if [ -z "${SECRET_VER}" ] || [ "${SECRET_VER}" -lt 0 ]; then
+      SECRET_VER="latest"
+    fi
+    SECRET_CONTENT=$(gcloud --project="${SECRET_PROJECT}" secrets versions access "${SECRET_VER}" --secret="${SECRET_NAME}")
+    EXIT_GET_SECRET=$?
+    if [ "${EXIT_GET_SECRET}" -ne 0 ]; then
+      SECRET_CONTENT=""
+    fi
+  fi
+}
+
+# Try to configure the GKE cluster
 if [ "${CLUSTER_TYPE}" = "GKE" ]; then
   if [ -n "$(gcloud config list account --format "value(core.account)")" ]; then
     if [ -n "${GCP_PROJECT}" ]; then
-      CLUSTER_NAME="$(gcloud container clusters list --project="${GCP_PROJECT}" --format=json | jq --raw-output '.[0].name')"
-      CLUSTER_LOCATION="$(gcloud container clusters list --project="${GCP_PROJECT}" --format=json | jq --raw-output '.[0].location')"
-      export CLUSTER_NAME
-      export KUBECONFIG="/tmp/${CLUSTER_NAME}_kubeconfig"
-      echo "export CLUSTER_NAME=\"${CLUSTER_NAME}\"" >> "${ADDITIONAL_ENV_FILE}"
-      echo "export KUBECONFIG=\"${KUBECONFIG}\"" >> "${ADDITIONAL_ENV_FILE}"
-      gcloud container clusters get-credentials "${CLUSTER_NAME}" --project "${GCP_PROJECT}" --zone "${CLUSTER_LOCATION}"
-      EXIT_CONF_KUBECONFIG=$?
-      if [ "${EXIT_CONF_KUBECONFIG}" -eq 0 ]; then
-        if [ -n "${SECRET_PROJECT}" ] && [ -n "${SECRET_NAME}" ] && [ "${SECRET_VER}" -gt 0 ]; then
-          # Try to get available namespaces
-          SECRET_CONTENT=$(gcloud --project="${SECRET_PROJECT}" secrets versions access "${SECRET_VER}" --secret="${SECRET_NAME}")
-          AVAILABLE_NAMESPACES=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AVAILABLE_NAMESPACES:-}" 'if .AVAILABLE_NAMESPACES then .AVAILABLE_NAMESPACES | join(" ") else $IFNULL end')
-          export AVAILABLE_NAMESPACES
-          echo "export AVAILABLE_NAMESPACES=\"${AVAILABLE_NAMESPACES}\"" >> "${ADDITIONAL_ENV_FILE}"
+      # If the CLUSTER_NAME is not provided, the first of the list is configured
+      if [ -z "${CLUSTER_NAME}" ]; then
+        CLUSTER_NAME="$(gcloud container clusters list --project="${GCP_PROJECT}" --format=json | jq --raw-output --arg IFNULL "" 'if .[0].name then .[0].name else $IFNULL end')"
+      fi
+      if [ -n "${CLUSTER_NAME}" ]; then
+        # If the CLUSTER_LOCATION is not provided, try to find the region using cluster name
+        if [ -z "${CLUSTER_LOCATION}" ]; then
+          CLUSTER_LOCATION="$(gcloud container clusters list --project="${GCP_PROJECT}" --filter=name="${CLUSTER_NAME}" --format=json | jq --raw-output --arg IFNULL "" 'if .[0].location then .[0].location else $IFNULL end')"
         fi
-        echo -e "\e[32m\e[1mDone!\e[0m"
+        if [ -n "${CLUSTER_LOCATION}" ]; then
+          export CLUSTER_NAME
+          export KUBECONFIG="/tmp/${CLUSTER_NAME}_kubeconfig"
+          echo "export CLUSTER_NAME=\"${CLUSTER_NAME}\"" >> "${ADDITIONAL_ENV_FILE}"
+          gcloud container clusters get-credentials "${CLUSTER_NAME}" --project "${GCP_PROJECT}" --zone "${CLUSTER_LOCATION}"
+          EXIT_CONF_KUBECONFIG=$?
+          if [ "${EXIT_CONF_KUBECONFIG}" -eq 0 ]; then
+            readSecret
+            if [ -n "${SECRET_CONTENT}" ] ; then
+              # Try to get available namespaces
+              AVAILABLE_NAMESPACES=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AVAILABLE_NAMESPACES:-}" 'if .AVAILABLE_NAMESPACES then .AVAILABLE_NAMESPACES | join(" ") else $IFNULL end')
+              export AVAILABLE_NAMESPACES
+              echo "export AVAILABLE_NAMESPACES=\"${AVAILABLE_NAMESPACES}\"" >> "${ADDITIONAL_ENV_FILE}"
+            fi
+            CLUSTER_CONFIGURED=1
+            echo "export KUBECONFIG=\"${KUBECONFIG}\"" >> "${ADDITIONAL_ENV_FILE}"
+            echo -e "\e[32m\e[1mDone!\e[0m"
+          else
+            echo -e "\e[93mNo clusters found (KUBECONFIG)\e[0m"
+          fi
+        else
+          echo -e "\e[93mNo clusters found (CLUSTER_LOCATION)\e[0m"
+        fi
       else
-        echo -e "\e[93mNo clusters found\e[0m"
+        echo -e "\e[93mNo clusters found (CLUSTER_NAME)\e[0m"
       fi
     else
       echo -e "\e[93mIf you want to automatically configure the ${CLUSTER_TYPE} cluster you need to set the \e[1mGCP_PROJECT\e[0m\e[93m env variable.\e[0m"
@@ -31,14 +70,25 @@ if [ "${CLUSTER_TYPE}" = "GKE" ]; then
   fi
 fi
 
+# Try to configure the EKS cluster
 if [ "${CLUSTER_TYPE}" = "EKS" ]; then
-  if [ -n "${SECRET_PROJECT}" ] && [ -n "${SECRET_NAME}" ] && [ "${SECRET_VER}" -gt 0 ]; then
+  readSecret
+  if [ -n "${SECRET_CONTENT}" ] ; then
     # Try to get cluster access information from the given secret
-    SECRET_CONTENT=$(gcloud --project="${SECRET_PROJECT}" secrets versions access "${SECRET_VER}" --secret="${SECRET_NAME}")
-    AWS_ACCESS_KEY_ID=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AWS_ACCESS_KEY_ID:-}" 'if .AWS_ACCESS_KEY_ID then .AWS_ACCESS_KEY_ID else $IFNULL end')
-    AWS_SECRET_ACCESS_KEY=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AWS_SECRET_ACCESS_KEY:-}" 'if .AWS_SECRET_ACCESS_KEY then .AWS_SECRET_ACCESS_KEY else $IFNULL end')
-    AWS_DEFAULT_REGION=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AWS_DEFAULT_REGION:-}" 'if .AWS_DEFAULT_REGION then .AWS_DEFAULT_REGION else $IFNULL end')
-    AVAILABLE_NAMESPACES=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "${AVAILABLE_NAMESPACES:-}" 'if .AVAILABLE_NAMESPACES then .AVAILABLE_NAMESPACES | join(" ") else $IFNULL end')
+    if [ -z "${AWS_ACCESS_KEY_ID}" ]; then
+      AWS_ACCESS_KEY_ID=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "" 'if .AWS_ACCESS_KEY_ID then .AWS_ACCESS_KEY_ID else $IFNULL end')
+    fi
+    if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+      AWS_SECRET_ACCESS_KEY=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "" 'if .AWS_SECRET_ACCESS_KEY then .AWS_SECRET_ACCESS_KEY else $IFNULL end')
+    fi
+    if [ -z "${AWS_DEFAULT_REGION}" ]; then
+      AWS_DEFAULT_REGION=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "" 'if .AWS_DEFAULT_REGION then .AWS_DEFAULT_REGION else $IFNULL end')
+    fi
+    if [ -z "${AVAILABLE_NAMESPACES}" ]; then
+      AVAILABLE_NAMESPACES=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "" 'if .AVAILABLE_NAMESPACES then .AVAILABLE_NAMESPACES | join(" ") else $IFNULL end')
+    fi
+
+    # Add the AWS variables to the additional environment variables file
     export AWS_ACCESS_KEY_ID
     export AWS_SECRET_ACCESS_KEY
     export AWS_DEFAULT_REGION
@@ -51,18 +101,48 @@ if [ "${CLUSTER_TYPE}" = "EKS" ]; then
 
   if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ] && [ -n "${AWS_DEFAULT_REGION}" ]; then
     echo -e "\e[32m\e[1mTry to configure EKS cluster ...\e[0m"
-    CLUSTER_NAME="$(aws eks list-clusters | jq --raw-output '.clusters[0]')"
+    # If the CLUSTER_NAME is not provided, the first of the list is configured
+    if [ -z "${CLUSTER_NAME}" ]; then
+      CLUSTER_NAME="$(aws eks list-clusters | jq --raw-output '.clusters[0]')"
+    fi
     if [ -n "${CLUSTER_NAME}" ]; then
       export CLUSTER_NAME
       export KUBECONFIG="/tmp/${CLUSTER_NAME}_kubeconfig"
       echo "export CLUSTER_NAME=\"${CLUSTER_NAME}\"" >> "${ADDITIONAL_ENV_FILE}"
-      echo "export KUBECONFIG=\"${KUBECONFIG}\"" >> "${ADDITIONAL_ENV_FILE}"
       aws eks update-kubeconfig --name "${CLUSTER_NAME}" --kubeconfig "${KUBECONFIG}"
-      echo -e "\e[32m\e[1mDone!\e[0m"
+      EXIT_CONF_KUBECONFIG=$?
+      if [ "${EXIT_CONF_KUBECONFIG}" -eq 0 ]; then
+        CLUSTER_CONFIGURED=1
+        echo "export KUBECONFIG=\"${KUBECONFIG}\"" >> "${ADDITIONAL_ENV_FILE}"
+        echo -e "\e[32m\e[1mDone!\e[0m"
+      else
+        echo -e "\e[93mNo clusters found (KUBECONFIG)\e[0m"
+      fi
     else
-      echo -e "\e[93mNo clusters found\e[0m"
+      echo -e "\e[93mNo clusters found (CLUSTER_NAME)\e[0m"
     fi
   else
     echo -e "\e[93mIf you want to automatically configure the ${CLUSTER_TYPE} cluster you need to set the \e[1mAWS_ACCESS_KEY_ID\e[0m\e[93m, \e[1mAWS_SECRET_ACCESS_KEY\e[0m\e[93m and \e[1mAWS_DEFAULT_REGION\e[0m\e[93m env variables.\e[0m"
   fi
+fi
+
+# Export CLUSTER_CONFIGURED variable
+echo "export CLUSTER_CONFIGURED=\"${CLUSTER_CONFIGURED}\"" >> "${ADDITIONAL_ENV_FILE}"
+
+# Try to configure the default namespace
+if [ "${CLUSTER_CONFIGURED}" -eq 1 ]; then
+  readSecret
+  if [ -z "${STARTUP_NAMESPACE}" ] && [ -n "${SECRET_CONTENT}" ]; then
+    STARTUP_NAMESPACE=$(echo "${SECRET_CONTENT}" | jq --raw-output --arg IFNULL "" 'if .STARTUP_NAMESPACE then .STARTUP_NAMESPACE else $IFNULL end')
+  fi
+  if [ -n "${STARTUP_NAMESPACE}" ]; then
+    export STARTUP_NAMESPACE
+    echo "export STARTUP_NAMESPACE=\"${STARTUP_NAMESPACE}\"" >> "${ADDITIONAL_ENV_FILE}"
+    kubens "${STARTUP_NAMESPACE}"
+  fi
+fi
+
+# Configure the autocomplete words for the kubens custom script
+if [ -n "${AVAILABLE_NAMESPACES}" ] ; then
+  echo "complete -W \"${AVAILABLE_NAMESPACES}\" kubens" >> /etc/profile
 fi

@@ -12,6 +12,8 @@ fi
 . "${ADDITIONAL_ENV_FILE}"
 
 # Print the namespaces in which the user can operate
-kubens
+if [ "${CLUSTER_CONFIGURED}" -eq 1 ]; then
+  kubens
+fi
 
 exec "$@"
