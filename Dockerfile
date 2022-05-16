@@ -44,7 +44,7 @@ RUN apt-get clean -q && apt-get autoremove --purge \
 
 FROM google/cloud-sdk:385.0.0-slim
 
-LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-aws-tools
+LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-cloud-tools
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
