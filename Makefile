@@ -1,15 +1,18 @@
-# You can test the precunfigured command line enviroment running:
+# You can test the preconfigured command line enviroment running:
 #
-# make aws-tools
+# make cloud-tools
 #
 
-IMAGE_NAME ?= sparkfabrik/aws-tools
+IMAGE_NAME ?= sparkfabrik/cloud-tools
 IMAGE_TAG ?= latest
 
-aws-tools: build-docker-image
+cloud-tools: build-docker-image
 	@touch .env
-	@docker run --rm -v ${PWD}:/mnt \
-		--hostname "SPARK-AWS-TOOLS-LOCAL" --name spark-aws-tools-local \
+	@docker run --rm \
+		-w /mnt \
+		-v ${PWD}/dotfiles:/root/dotfiles \
+		-v ~/.config/gcloud:/root/.config/gcloud \
+		--hostname "SPARK-CLOUD-TOOLS-LOCAL" --name spark-cloud-tools-local \
 		--env-file .env \
 		-it $(IMAGE_NAME):$(IMAGE_TAG)
 

@@ -8,7 +8,7 @@ on:
       - main
 
 env:
-  IMAGE_NAME: aws-tools
+  IMAGE_NAME: cloud-tools
 
 jobs:
   test:
