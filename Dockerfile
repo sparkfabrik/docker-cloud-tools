@@ -89,9 +89,14 @@ RUN chmod +x /usr/local/bin/jq
 COPY scripts/kubens /usr/local/bin/kubens
 RUN chmod +x /usr/local/bin/kubens
 
+# Create userless home, it will be used only for cache
+ENV HOME /cloud-tools-cli
+RUN mkdir /cloud-tools-cli \
+  && chmod 777 /cloud-tools-cli
+
 # Save history
-ENV HISTFILE=/root/dotfiles/.bash_history
-RUN mkdir mkdir -p /root/dotfiles
+ENV HISTFILE=/cloud-tools-cli/dotfiles/.bash_history
+RUN mkdir -p /cloud-tools-cli/dotfiles
 
 # Prompter function to build the bash prompt with additional information
 ENV PROMPT_COMMAND=prompter
@@ -99,7 +104,8 @@ COPY scripts/prompter.sh /etc/profile.d/prompter.sh
 RUN chmod +x /etc/profile.d/prompter.sh
 
 # Final settings
-RUN echo "alias k=\"kubectl\"" >> /etc/profile \
+RUN chmod 666 /etc/profile \
+  && echo "alias k=\"kubectl\"" >> /etc/profile \
   && echo "complete -C '/usr/local/bin/aws_completer' aws" >> /etc/profile \
   && echo "source <(kubectl completion bash)" >> /etc/profile \
   && echo "source <(helm completion bash)" >> /etc/profile \
