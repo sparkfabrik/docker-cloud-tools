@@ -20,8 +20,12 @@ build-docker-image:
 	docker buildx build --load -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile .
 
 # The following jobs are intended for test purpose only
-build-docker-image-amd64:
-	docker buildx build --platform "linux/amd64" -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile .
+build-docker-image-amd64: PLATFORM := amd64
+build-docker-image-amd64: build-docker-image-platform-template
 
-build-docker-image-arm64:
-	docker buildx build --platform "linux/arm64" -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile .
+build-docker-image-arm64: PLATFORM := arm64
+build-docker-image-arm64: build-docker-image-platform-template
+
+build-docker-image-platform-template:
+	@if [ -z "$(PLATFORM)" ]; then echo "PLATFORM is not defined"; exit 1; fi
+	docker buildx build --platform "linux/$(PLATFORM)" -t $(IMAGE_NAME):$(IMAGE_TAG)-$(PLATFORM) -f Dockerfile .

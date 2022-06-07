@@ -60,7 +60,10 @@ ENV USE_GKE_GCLOUD_AUTH_PLUGIN=true
 RUN apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false google-cloud-sdk-gke-gcloud-auth-plugin
 
 # Install aws-cli (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-RUN curl -o "/tmp/awscliv2.zip" -L0  "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+# We keep the final url used to download the awscli tool, it could be useful for debug purposes.
+ENV AWSCLI_URL_FILE "/tmp/awscli.url"
+RUN echo "https://awscli.amazonaws.com/awscli-exe-linux-$([ "${TARGETARCH}" = "arm64" ] && echo "aarch64" || echo "x86_64").zip" > "${AWSCLI_URL_FILE}" \
+  && curl -o "/tmp/awscliv2.zip" -L0 "$(cat ${AWSCLI_URL_FILE})" \
   && unzip /tmp/awscliv2.zip -d /tmp \
   && /tmp/aws/install \
   && rm -rf /tmp/aws /tmp/awscliv2.zip
