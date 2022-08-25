@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export ADDITIONAL_ENV_FILE=/tmp/.env.additional
+ADDITIONAL_ENV_FILE=${ADDITIONAL_ENV_FILE:-"/tmp/.env.additional"}
+export ADDITIONAL_ENV_FILE
 touch "${ADDITIONAL_ENV_FILE}"
 
 if [ -d "/docker-entrypoint.d" ]; then
