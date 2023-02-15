@@ -42,7 +42,7 @@ RUN cd /tmp/jq-jq-${JQ_VERSION} \
 RUN apt-get clean -q && apt-get autoremove --purge \
   && rm -rf /var/lib/apt/lists/*
 
-FROM google/cloud-sdk:385.0.0-slim
+FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:418.0.0-debian_component_based
 
 LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-cloud-tools
 
