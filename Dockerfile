@@ -1,4 +1,4 @@
-FROM google/cloud-sdk:385.0.0-slim as build
+FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:418.0.0-debian_component_based as build
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
