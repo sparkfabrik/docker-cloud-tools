@@ -1,4 +1,4 @@
-FROM gcr.io/google.com/cloudsdktool/google-cloud-cli:418.0.0-debian_component_based as build
+FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:418.0.0-debian_component_based as build
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
@@ -42,7 +42,7 @@ RUN cd /tmp/jq-jq-${JQ_VERSION} \
 RUN apt-get clean -q && apt-get autoremove --purge \
   && rm -rf /var/lib/apt/lists/*
 
-FROM google/cloud-sdk:385.0.0-slim
+FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:418.0.0-debian_component_based
 
 LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-cloud-tools
 
@@ -56,8 +56,8 @@ RUN apt-get update \
   unzip vim bash bash-completion
 
 # Install gke-gcloud-auth-plugin (https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke)
-ENV USE_GKE_GCLOUD_AUTH_PLUGIN=true
-RUN apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false google-cloud-sdk-gke-gcloud-auth-plugin
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
+RUN gcloud components install gke-gcloud-auth-plugin
 
 # Install aws-cli (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
 # We keep the final url used to download the awscli tool, it could be useful for debug purposes.
