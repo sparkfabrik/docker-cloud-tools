@@ -56,7 +56,7 @@ RUN apt-get update \
   unzip vim bash bash-completion
 
 # Install gke-gcloud-auth-plugin (https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke)
-ENV USE_GKE_GCLOUD_AUTH_PLUGIN=true
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 RUN apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false google-cloud-sdk-gke-gcloud-auth-plugin
 
 # Install aws-cli (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
