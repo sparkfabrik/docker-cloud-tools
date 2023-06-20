@@ -1,4 +1,4 @@
-FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:418.0.0-debian_component_based as build
+FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:435.0.1-debian_component_based as build
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
@@ -9,22 +9,26 @@ RUN apt-get update && \
   gzip libtool autoconf automake
 
 # Download helm
-ENV HELM_VERSION 3.8.2
+# https://github.com/helm/helm/releases
+ENV HELM_VERSION 3.12.1
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download stern
-ENV STERN_VERSION 1.21.0
+# https://github.com/stern/stern/releases
+ENV STERN_VERSION 1.25.0
 RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/stern /usr/local/bin/stern
 
 # Download jq
+# https://github.com/jqlang/jq/releases
 ENV JQ_VERSION 1.6
 RUN curl -o /tmp/jq-${JQ_VERSION}.tar.gz -L0 "https://github.com/stedolan/jq/archive/refs/tags/jq-${JQ_VERSION}.tar.gz" \
   && tar -zxvf /tmp/jq-${JQ_VERSION}.tar.gz -C /tmp
 
+# https://github.com/kkos/oniguruma/tree/v6.9.7.1
 ENV ONIGURUMA_VERSION 6.9.7.1
 RUN curl -o /tmp/oniguruma-${ONIGURUMA_VERSION}.tar.gz -L0 "https://github.com/kkos/oniguruma/archive/refs/tags/v${ONIGURUMA_VERSION}.tar.gz" \
   && tar -zxvf /tmp/oniguruma-${ONIGURUMA_VERSION}.tar.gz -C /tmp
@@ -42,7 +46,7 @@ RUN cd /tmp/jq-jq-${JQ_VERSION} \
 RUN apt-get clean -q && apt-get autoremove --purge \
   && rm -rf /var/lib/apt/lists/*
 
-FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:418.0.0-debian_component_based
+FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:435.0.1-debian_component_based
 
 LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-cloud-tools
 
