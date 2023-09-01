@@ -24,7 +24,8 @@ jobs:
 
       - name: Build images
         run: |
-          docker buildx build --load . --tag $IMAGE_NAME:latest
+          GOOGLE_CLOUD_CLI_IMAGE_TAG="$(make print-google-cloud-cli-image-tag)"
+          docker buildx build --build-arg GOOGLE_CLOUD_CLI_IMAGE_TAG=${GOOGLE_CLOUD_CLI_IMAGE_TAG} --load . --tag $IMAGE_NAME:latest
 
   deploy:
     needs: test
@@ -49,5 +50,6 @@ jobs:
           # Change all uppercase to lowercase.
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
           echo IMAGE_ID=$IMAGE_ID
-          docker buildx build --push . --platform "linux/amd64,linux/arm64" \
+          GOOGLE_CLOUD_CLI_IMAGE_TAG="$(make print-google-cloud-cli-image-tag)"
+          docker buildx build --build-arg GOOGLE_CLOUD_CLI_IMAGE_TAG=${GOOGLE_CLOUD_CLI_IMAGE_TAG} --push . --platform "linux/amd64,linux/arm64" \
             --tag $IMAGE_ID:latest \

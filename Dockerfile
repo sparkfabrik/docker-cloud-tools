@@ -1,4 +1,7 @@
-FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:435.0.1-debian_component_based as build
+# Use the same version of the base image in different stages
+ARG GOOGLE_CLOUD_CLI_IMAGE_TAG
+
+FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG} as build
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
@@ -10,14 +13,14 @@ RUN apt-get update && \
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION 3.12.1
+ENV HELM_VERSION 3.12.3
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download stern
 # https://github.com/stern/stern/releases
-ENV STERN_VERSION 1.25.0
+ENV STERN_VERSION 1.26.0
 RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/stern /usr/local/bin/stern
@@ -46,7 +49,10 @@ RUN cd /tmp/jq-jq-${JQ_VERSION} \
 RUN apt-get clean -q && apt-get autoremove --purge \
   && rm -rf /var/lib/apt/lists/*
 
-FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:435.0.1-debian_component_based
+# Use the same version of the base image in different stages
+ARG GOOGLE_CLOUD_CLI_IMAGE_TAG
+
+FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG}
 
 LABEL org.opencontainers.image.source https://github.com/sparkfabrik/docker-cloud-tools
 
@@ -116,7 +122,8 @@ RUN chmod 666 /etc/profile \
   && echo "complete -C '/usr/local/bin/aws_completer' aws" >> /etc/profile \
   && echo "source <(kubectl completion bash)" >> /etc/profile \
   && echo "source <(helm completion bash)" >> /etc/profile \
-  && echo "source <(stern --completion bash)" >> /etc/profile
+  && echo "source <(stern --completion bash)" >> /etc/profile \
+  && echo "source /google-cloud-sdk/path.bash.inc" >> /etc/profile
 
 # Cleanup unwanted files to keep the image light
 RUN apt-get clean -q && apt-get autoremove --purge \
