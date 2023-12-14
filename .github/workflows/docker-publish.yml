@@ -97,6 +97,7 @@ jobs:
           ignore-unfixed: true
           severity: "CRITICAL,HIGH"
           vuln-type: "os,library"
+          skip-dirs: "/google-cloud-sdk"
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v2
