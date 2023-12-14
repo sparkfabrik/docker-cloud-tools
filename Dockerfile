@@ -93,9 +93,9 @@ ENV KUBECTX_VERSION 0.9.5
 RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubens" \
   && curl -o /utility/kubectx -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubectx" \
   && chmod +x /utility/kubens /utility/kubectx \
-  && curl -o /etc/profile.d/kubens.sh -sLO "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubens.bash" \
+  && curl -o /utility/kubens.autocomple.sh -sLO "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubens.bash" \
   && curl -o /etc/profile.d/kubectx.sh -sLO "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubectx.bash" \
-  && chmod +x /etc/profile.d/kubectx.sh /etc/profile.d/kubens.sh
+  && chmod +x /etc/profile.d/kubectx.sh /utility/kubens.autocomple.sh
 
 # Copy helm from previous stage
 COPY --from=build /usr/local/bin/helm /usr/local/bin/helm

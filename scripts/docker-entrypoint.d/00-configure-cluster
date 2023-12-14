@@ -148,5 +148,8 @@ fi
 # Configure the autocomplete words for the kubens custom script only
 # if the original kubens is not configured
 if [ "${ORIGINAL_KUBENS:-0}" = "0" ] && [ -n "${AVAILABLE_NAMESPACES}" ]; then
-  echo "complete -W \"${AVAILABLE_NAMESPACES}\" kubens" >>/etc/profile
+  echo "complete -W \"${AVAILABLE_NAMESPACES}\" kubens" >>/etc/profile.d/kubens.sh
+else
+  cp /utility/kubens.autocomple.sh /etc/profile.d/kubens.sh
 fi
+chmod +x /etc/profile.d/kubens.sh
