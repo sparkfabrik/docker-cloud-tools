@@ -70,6 +70,9 @@ RUN gcloud components install app-engine-java beta gke-gcloud-auth-plugin
 # Install gke-gcloud-auth-plugin (https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke)
 ENV USE_GKE_GCLOUD_AUTH_PLUGIN true
 
+# Remove unnecessary components.
+RUN rm -f /usr/local/libexec/docker/cli-plugins/docker-buildx
+
 # Install additional components.
 RUN apk --no-cache add bat curl less make vim \
   bash-completion grep groff gettext  \
