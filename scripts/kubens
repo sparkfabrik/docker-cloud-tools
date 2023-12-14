@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ -z "${1}" ]; then
   if [ -n "${AVAILABLE_NAMESPACES}" ]; then
     echo -e "The available namespaces are: \e[1m${AVAILABLE_NAMESPACES}\e[0m"
   fi
 elif [ "${1}" = "-u" ]; then
-  kubectl config set-context --current --namespace= > /dev/null
+  kubectl config set-context --current --namespace= >/dev/null
   echo -e "\e[93m\e[1mNamespace deconfigured.\e[0m"
 else
   if ! echo "${AVAILABLE_NAMESPACES}" | grep -qE "(^| )${1}( |$)"; then
@@ -14,6 +14,6 @@ else
     exit 0
   fi
   export CURRENT_NAMESPACE="${1}"
-  kubectl config set-context --current --namespace="${CURRENT_NAMESPACE}" > /dev/null
+  kubectl config set-context --current --namespace="${CURRENT_NAMESPACE}" >/dev/null
   echo -e "\e[1mNamespace configured: \e[32m${CURRENT_NAMESPACE}\e[0m"
 fi

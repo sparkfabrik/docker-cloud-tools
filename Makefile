@@ -3,16 +3,16 @@
 # make cloud-tools
 #
 
-GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 444.0.0-debian_component_based
+GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 456.0.0-alpine
 IMAGE_NAME ?= sparkfabrik/cloud-tools
 IMAGE_TAG ?= latest
 
 cloud-tools: build-docker-image
 	@touch .env
 	@docker run --rm \
+		-v ${PWD}/dotfiles:/cloud-tools-cli/dotfiles \
+		-v ~/.config/gcloud:/cloud-tools-cli/.config/gcloud \
 		-w /mnt \
-		-v ${PWD}/dotfiles:/root/dotfiles \
-		-v ~/.config/gcloud:/root/.config/gcloud \
 		--hostname "SPARK-CLOUD-TOOLS-LOCAL" --name spark-cloud-tools-local \
 		--env-file .env \
 		-it $(IMAGE_NAME):$(IMAGE_TAG)
