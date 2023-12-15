@@ -126,10 +126,6 @@ RUN mkdir /cloud-tools-cli \
 ENV HISTFILE=/cloud-tools-cli/dotfiles/.bash_history
 RUN mkdir -p /cloud-tools-cli/dotfiles
 
-# Make /etc/profile writable for everyone.
-# This image could be used with a non-root user.
-RUN chmod 777 /etc/profile
-
 # Prompter function to build the bash prompt with additional information
 ENV PROMPT_COMMAND=prompter
 COPY scripts/prompter.sh /etc/profile.d/prompter.sh
@@ -150,6 +146,11 @@ RUN touch /etc/profile.d/tools-completion.sh \
 RUN mkdir -p /docker-entrypoint.d
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 COPY scripts/docker-entrypoint.d /docker-entrypoint.d
+
+# Make /etc/profile and /etc/profile.d writable for everyone.
+# This image could be used with a non-root user.
+RUN chmod 777 /etc/profile \
+  && chmod -R 777 /etc/profile.d
 
 # Create custom directory for custom-docker-entrypoint.d
 RUN mkdir -p /custom-docker-entrypoint.d
