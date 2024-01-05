@@ -3,7 +3,7 @@
 # make cloud-tools
 #
 
-GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 456.0.0-alpine
+GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 458.0.1-alpine
 IMAGE_NAME ?= sparkfabrik/cloud-tools
 IMAGE_TAG ?= latest
 
