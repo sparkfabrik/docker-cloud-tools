@@ -58,7 +58,6 @@ ARG GOOGLE_CLOUD_CLI_IMAGE_TAG
 
 # Create the final image
 FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG}
-LABEL org.opencontainers.image.source=https://github.com/sparkfabrik/docker-cloud-tools
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
