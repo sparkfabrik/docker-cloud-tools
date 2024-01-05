@@ -1,10 +1,12 @@
 name: Docker
+
 on:
   pull_request:
   push:
     branches: main
 
 env:
+  RELEASE_BRANCH: main
   REGISTRY: ghcr.io
   IMAGE_NAME: cloud-tools
 
@@ -21,7 +23,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
             # set latest tag for main branch
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) }}
             type=sha,format=long,prefix=
 
       - name: Set up Docker Buildx
@@ -46,7 +48,7 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: contains('["refs/heads/main", "refs/heads/master"]', github.ref)
 
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +68,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
             # set latest tag for main branch
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) }}
             type=sha,format=long,prefix=
 
       - name: Set up Docker Buildx
