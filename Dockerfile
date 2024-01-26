@@ -1,9 +1,13 @@
 # AWS CLI v2
-ARG AWS_CLI_VERSION=2.15.0
+ARG AWS_CLI_VERSION=2.15.14
 ARG ALPINE_VERSION=3.18
 # To fetch the right alpine version use:
 # docker run --rm --entrypoint ash eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG} -c 'cat /etc/issue'
-# Check the available version here: https://github.com/sparkfabrik/docker-alpine-aws-cli/pkgs/container/docker-alpine-aws-cli
+# You can find the list of the available image tags here:
+# https://console.cloud.google.com/gcr/images/google.com:cloudsdktool/EU/google-cloud-cli
+#
+# Check the available version for the AWS CLI here:
+# https://github.com/sparkfabrik/docker-alpine-aws-cli/pkgs/container/docker-alpine-aws-cli
 
 # Use the same version of the base image in different stages
 ARG GOOGLE_CLOUD_CLI_IMAGE_TAG
@@ -21,14 +25,14 @@ RUN apk --no-cache add autoconf automake build-base curl gzip libtool make opens
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION 3.13.2
+ENV HELM_VERSION 3.14.0
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download stern
 # https://github.com/stern/stern/releases
-ENV STERN_VERSION 1.27.0
+ENV STERN_VERSION 1.28.0
 RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/stern /usr/local/bin/stern
