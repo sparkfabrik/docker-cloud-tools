@@ -2,8 +2,10 @@
 #
 # make cloud-tools
 #
+# You can find the list of the available image tags here:
+# https://console.cloud.google.com/gcr/images/google.com:cloudsdktool/EU/google-cloud-cli
 
-GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 458.0.1-alpine
+GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 461.0.0-alpine
 IMAGE_NAME ?= sparkfabrik/cloud-tools
 IMAGE_TAG ?= latest
 

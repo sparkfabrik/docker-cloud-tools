@@ -9,12 +9,21 @@ env:
   RELEASE_BRANCH: main
   REGISTRY: ghcr.io
   IMAGE_NAME: cloud-tools
+  PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get the Google Cloud CLI image tag
+        id: vars
+        run: |
+          echo "google_cloud_cli_image_tag=$(make print-google-cloud-cli-image-tag)" >> "$GITHUB_OUTPUT"
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -25,14 +34,6 @@ jobs:
             # set latest tag for main branch
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) }}
             type=sha,format=long,prefix=
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Get the Google Cloud CLI image tag
-        id: vars
-        run: |
-          echo "google_cloud_cli_image_tag=$(make print-google-cloud-cli-image-tag)" >> "$GITHUB_OUTPUT"
 
       - name: Build Docker image
         uses: docker/build-push-action@v5
@@ -61,6 +62,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Get the Google Cloud CLI image tag
+        id: vars
+        run: |
+          echo "google_cloud_cli_image_tag=$(make print-google-cloud-cli-image-tag)" >> "$GITHUB_OUTPUT"
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
@@ -71,19 +80,11 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', env.RELEASE_BRANCH) }}
             type=sha,format=long,prefix=
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Get the Google Cloud CLI image tag
-        id: vars
-        run: |
-          echo "google_cloud_cli_image_tag=$(make print-google-cloud-cli-image-tag)" >> "$GITHUB_OUTPUT"
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.PLATFORMS }}
           context: .
           build-args: |
             GOOGLE_CLOUD_CLI_IMAGE_TAG=${{ steps.vars.outputs.google_cloud_cli_image_tag }}
