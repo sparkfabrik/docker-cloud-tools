@@ -78,8 +78,8 @@ RUN rm -f /usr/local/libexec/docker/cli-plugins/docker-buildx
 
 # Install additional components.
 RUN apk --no-cache add bat curl less make vim \
-  bash-completion grep groff gettext  \
-  openssl ncurses unzip yq
+  bash-completion grep gettext \
+  openssl mandoc ncurses unzip yq
 
 # Create utility folder
 RUN mkdir -p /utility
