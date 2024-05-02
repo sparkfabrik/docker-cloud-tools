@@ -1,6 +1,7 @@
 # AWS CLI v2
-ARG AWS_CLI_VERSION=2.15.14
-ARG ALPINE_VERSION=3.18
+ARG AWS_CLI_VERSION=2.15.42
+ARG ALPINE_VERSION=3.19
+
 # To fetch the right alpine version use:
 # docker run --rm --entrypoint ash eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG} -c 'cat /etc/issue'
 # You can find the list of the available image tags here:
@@ -25,7 +26,7 @@ RUN apk --no-cache add autoconf automake build-base curl gzip libtool make opens
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION 3.14.0
+ENV HELM_VERSION 3.14.4
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
@@ -39,7 +40,7 @@ RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://
 
 # Download jq
 # https://github.com/jqlang/jq/releases
-ENV JQ_VERSION 1.7
+ENV JQ_VERSION 1.7.1
 RUN curl -o /tmp/jq-${JQ_VERSION}.tar.gz -L0 "https://github.com/stedolan/jq/archive/refs/tags/jq-${JQ_VERSION}.tar.gz" \
   && tar -zxvf /tmp/jq-${JQ_VERSION}.tar.gz -C /tmp
 
@@ -77,9 +78,9 @@ ENV USE_GKE_GCLOUD_AUTH_PLUGIN true
 RUN rm -f /usr/local/libexec/docker/cli-plugins/docker-buildx
 
 # Install additional components.
-RUN apk --no-cache add bat curl less make vim \
-  bash-completion grep gettext \
-  openssl mandoc ncurses unzip yq
+RUN apk --no-cache add \
+  bash-completion bat curl gettext grep groff less \
+  make mandoc ncurses openssl unzip vim yq
 
 # Create utility folder
 RUN mkdir -p /utility
