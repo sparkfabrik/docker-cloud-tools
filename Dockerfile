@@ -91,8 +91,11 @@ RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws \
   && ln -s /usr/local/aws-cli/v2/current/bin/aws_completer /usr/local/bin/aws_completer
 
 # Download kubectl
-RUN curl -o /usr/local/bin/kubectl -sLO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${TARGETARCH}/kubectl" \
-  && chmod +x /usr/local/bin/kubectl
+# https://console.cloud.google.com/storage/browser/kubernetes-release/release
+ENV KUBECTL_VERSION 1.29.4
+RUN echo "Installing kubectl ${KUBECTL_VERSION}..." && \
+  curl -so /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl && \
+  chmod +x /usr/local/bin/kubectl
 
 # Download kubectx and kubens utilities
 # https://github.com/ahmetb/kubectx
