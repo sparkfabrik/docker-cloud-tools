@@ -26,14 +26,14 @@ RUN apk --no-cache add autoconf automake build-base curl gzip libtool make opens
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION 3.14.4
+ENV HELM_VERSION 3.15.0
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download stern
 # https://github.com/stern/stern/releases
-ENV STERN_VERSION 1.28.0
+ENV STERN_VERSION 1.29.0
 RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/stern /usr/local/bin/stern
@@ -92,9 +92,9 @@ RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws \
 
 # Download kubectl
 # https://console.cloud.google.com/storage/browser/kubernetes-release/release
-ENV KUBECTL_VERSION 1.29.4
-RUN echo "Installing kubectl ${KUBECTL_VERSION}..." && \
-  curl -so /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/${TARGETARCH}/kubectl && \
+ENV KUBECTL_STABLE_VERSION 1.29
+RUN echo "Installing kubectl using the stable version of ${KUBECTL_STABLE_VERSION}..." && \
+  curl -so /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -L -s "https://storage.googleapis.com/kubernetes-release/release/stable-${KUBECTL_STABLE_VERSION}.txt")/bin/linux/${TARGETARCH}/kubectl && \
   chmod +x /usr/local/bin/kubectl
 
 # Download kubectx and kubens utilities
