@@ -3,7 +3,7 @@
 export ADDITIONAL_ENV_FILE=/tmp/.env.additional
 touch "${ADDITIONAL_ENV_FILE}"
 
-# Fix kubens bin
+# Install the original kubens command if it is required
 if [ "${ORIGINAL_KUBENS:-0}" = "1" ]; then
   echo "Using original kubens!"
   unlink /usr/local/bin/kubens

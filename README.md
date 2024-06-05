@@ -27,10 +27,11 @@ docker run --rm -it \
 
 ### Configuration environment variables
 
-- `CLUSTER_NAME`: the name of the cluster that you want to configure (**optional**, if the variable is not provided, the first cluster in the `list` command will be configured; e.g.: `prod-cluster`)
-- `CLUSTER_LOCATION` (only for GCP): the location of the cluster (**optional**, if the variable is not provided, the location will be searched using the cluster name; e.g.: `europe-west4-a`)
-- `AVAILABLE_NAMESPACES`: the list of the available namespaces as space separated values (e.g.: `default stage production`)
-- `STARTUP_NAMESPACE`: the namespace configured at CLI startup (e.g.: `stage`)
+- `CLUSTER_NAME`: the name of the cluster that you want to configure (**optional**, if the variable is not provided, the first cluster in the `list` command will be configured; e.g.: `prod-cluster`).
+- `CLUSTER_LOCATION` (only for GCP): the location of the cluster (**optional**, if the variable is not provided, the location will be searched using the cluster name; e.g.: `europe-west4-a`).
+- `AVAILABLE_NAMESPACES`: the list of the available namespaces as space separated values (e.g.: `default stage production`).
+- `STARTUP_NAMESPACE`: the namespace configured at CLI startup (e.g.: `stage`).
+- `ORIGINAL_KUBENS`: if you want to use the original `kubens` command, set this variable to `1`. The default shipped `kubens` command is a custom script that uses the `AVAILABLE_NAMESPACES` environment variable to list the available namespaces to limit choices. It is useful to increase the developer experience when your teams have access only to few namespaces.
 
 ### GCP secret
 
