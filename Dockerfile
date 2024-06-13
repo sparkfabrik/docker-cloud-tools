@@ -1,5 +1,5 @@
 # AWS CLI v2
-ARG AWS_CLI_VERSION=2.15.42
+ARG AWS_CLI_VERSION=2.16.7
 ARG ALPINE_VERSION=3.19
 
 # To fetch the right alpine version use:
@@ -26,14 +26,14 @@ RUN apk --no-cache add autoconf automake build-base curl gzip libtool make opens
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION 3.15.0
+ENV HELM_VERSION 3.15.2
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download stern
 # https://github.com/stern/stern/releases
-ENV STERN_VERSION 1.29.0
+ENV STERN_VERSION 1.30.0
 RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/stern /usr/local/bin/stern
