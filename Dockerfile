@@ -118,8 +118,7 @@ RUN set -x; cd "$(mktemp -d)" \
   && curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW}.tar.gz" \
   && tar zxvf "${KREW}.tar.gz" \
   && rm "${KREW}.tar.gz" \
-  && ./"${KREW}" install krew \
-  && chmod +x /root && chmod -R 755 /root/.krew/store
+  && ./"${KREW}" install krew
 
 ENV PATH "/root/.krew/bin:$PATH"
 
@@ -127,6 +126,9 @@ ENV PATH "/root/.krew/bin:$PATH"
 RUN kubectl krew install resource-capacity && \
   # Install community-images using krew https://github.com/kubernetes-sigs/community-images#kubectl-community-images
   kubectl krew install community-images
+
+# Make krew directory executable
+RUN chmod +x /root && chmod -R 755 /root/.krew/store
 
 # Copy helm from previous stage
 COPY --from=build /usr/local/bin/helm /usr/local/bin/helm
