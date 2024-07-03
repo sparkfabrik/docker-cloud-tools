@@ -1,6 +1,6 @@
 # AWS CLI v2
-ARG AWS_CLI_VERSION=2.16.7
-ARG ALPINE_VERSION=3.19
+ARG AWS_CLI_VERSION=2.17.7
+ARG ALPINE_VERSION=3.20
 
 # To fetch the right alpine version use:
 # docker run --rm --entrypoint ash eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG} -c 'cat /etc/issue'
@@ -106,6 +106,26 @@ RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/dow
   && curl -o /utility/kubens.autocomple.sh -sLO "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubens.bash" \
   && curl -o /etc/profile.d/kubectx.sh -sLO "https://raw.githubusercontent.com/ahmetb/kubectx/v${KUBECTX_VERSION}/completion/kubectx.bash" \
   && chmod +x /etc/profile.d/kubectx.sh /utility/kubens.autocomple.sh
+
+# Install Krew - kubectl plugin manager
+# https://github.com/kubernetes-sigs/krew/releases
+# https://krew.sigs.k8s.io/docs/user-guide/setup/install/
+ENV KREW_VERSION 0.4.4
+RUN set -x; cd "$(mktemp -d)" && \
+  OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
+  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" && \
+  KREW="krew-${OS}_${ARCH}" && \
+  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW}.tar.gz" && \
+  tar zxvf "${KREW}.tar.gz" && \
+  rm "${KREW}.tar.gz" && \
+  ./"${KREW}" install krew
+
+ENV PATH "/root/.krew/bin:$PATH"
+
+# Install kube-capacity using krew https://github.com/robscott/kube-capacity
+RUN kubectl krew install resource-capacity && \
+  # Install community-images using krew https://github.com/kubernetes-sigs/community-images#kubectl-community-images
+  kubectl krew install community-images
 
 # Copy helm from previous stage
 COPY --from=build /usr/local/bin/helm /usr/local/bin/helm
