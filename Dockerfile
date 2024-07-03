@@ -111,14 +111,15 @@ RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/dow
 # https://github.com/kubernetes-sigs/krew/releases
 # https://krew.sigs.k8s.io/docs/user-guide/setup/install/
 ENV KREW_VERSION 0.4.4
-RUN set -x; cd "$(mktemp -d)" && \
-  OS="$(uname | tr '[:upper:]' '[:lower:]')" && \
-  ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" && \
-  KREW="krew-${OS}_${ARCH}" && \
-  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW}.tar.gz" && \
-  tar zxvf "${KREW}.tar.gz" && \
-  rm "${KREW}.tar.gz" && \
-  ./"${KREW}" install krew
+RUN set -x; cd "$(mktemp -d)" \
+  && OS="$(uname | tr '[:upper:]' '[:lower:]')" \
+  && ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" \
+  && KREW="krew-${OS}_${ARCH}" \
+  && curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/download/v${KREW_VERSION}/${KREW}.tar.gz" \
+  && tar zxvf "${KREW}.tar.gz" \
+  && rm "${KREW}.tar.gz" \
+  && ./"${KREW}" install krew \
+  && chmod +x /root && chmod -R 755 /root/.krew/store
 
 ENV PATH "/root/.krew/bin:$PATH"
 
@@ -164,6 +165,7 @@ RUN touch /etc/profile.d/tools-completion.sh \
   && echo "source <(kubectl completion bash)" >> /etc/profile.d/tools-completion.sh \
   && echo "alias k=\"kubectl\"" >> /etc/profile.d/tools-completion.sh \
   && echo "complete -o default -F __start_kubectl k" >> /etc/profile.d/tools-completion.sh \
+  && echo "export PATH=\"/root/.krew/bin:$PATH\"" >> /etc/profile.d/tools-completion.sh \
   && echo "source <(helm completion bash)" >> /etc/profile.d/tools-completion.sh \
   && echo "source <(stern --completion bash)" >> /etc/profile.d/tools-completion.sh \
   && echo "source /google-cloud-sdk/path.bash.inc" >> /etc/profile.d/tools-completion.sh \
