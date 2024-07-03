@@ -13,10 +13,10 @@ ARG ALPINE_VERSION=3.20
 # Use the same version of the base image in different stages
 ARG GOOGLE_CLOUD_CLI_IMAGE_TAG
 
-FROM ghcr.io/sparkfabrik/docker-alpine-aws-cli:${AWS_CLI_VERSION}-alpine${ALPINE_VERSION} as awscli
+FROM ghcr.io/sparkfabrik/docker-alpine-aws-cli:${AWS_CLI_VERSION}-alpine${ALPINE_VERSION} AS awscli
 
 # Building and downloading all the tools in a single stage
-FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG} as build
+FROM eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG} AS build
 
 # Build target arch passed by BuildKit
 ARG TARGETARCH
@@ -26,26 +26,26 @@ RUN apk --no-cache add autoconf automake build-base curl gzip libtool make opens
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION 3.15.2
+ENV HELM_VERSION=3.15.2
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download stern
 # https://github.com/stern/stern/releases
-ENV STERN_VERSION 1.30.0
+ENV STERN_VERSION=1.30.0
 RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -LO "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/stern /usr/local/bin/stern
 
 # Download jq
 # https://github.com/jqlang/jq/releases
-ENV JQ_VERSION 1.7.1
+ENV JQ_VERSION=1.7.1
 RUN curl -o /tmp/jq-${JQ_VERSION}.tar.gz -L0 "https://github.com/stedolan/jq/archive/refs/tags/jq-${JQ_VERSION}.tar.gz" \
   && tar -zxvf /tmp/jq-${JQ_VERSION}.tar.gz -C /tmp
 
 # https://github.com/kkos/oniguruma/tree/v6.9.9
-ENV ONIGURUMA_VERSION 6.9.9
+ENV ONIGURUMA_VERSION=6.9.9
 RUN curl -o /tmp/oniguruma-${ONIGURUMA_VERSION}.tar.gz -L0 "https://github.com/kkos/oniguruma/archive/refs/tags/v${ONIGURUMA_VERSION}.tar.gz" \
   && tar -zxvf /tmp/oniguruma-${ONIGURUMA_VERSION}.tar.gz -C /tmp
 
@@ -72,7 +72,7 @@ RUN gcloud components install app-engine-java beta gke-gcloud-auth-plugin
 
 # Use the gke-auth-plugin to authenticate to the GKE cluster.
 # Install gke-gcloud-auth-plugin (https://cloud.google.com/blog/products/containers-kubernetes/kubectl-auth-changes-in-gke)
-ENV USE_GKE_GCLOUD_AUTH_PLUGIN true
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=true
 
 # Remove unnecessary components.
 RUN rm -f /usr/local/libexec/docker/cli-plugins/docker-buildx
@@ -92,14 +92,14 @@ RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws \
 
 # Download kubectl
 # https://console.cloud.google.com/storage/browser/kubernetes-release/release
-ENV KUBECTL_STABLE_VERSION 1.29
+ENV KUBECTL_STABLE_VERSION=1.29
 RUN echo "Installing kubectl using the stable version of ${KUBECTL_STABLE_VERSION}..." && \
   curl -so /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -L -s "https://storage.googleapis.com/kubernetes-release/release/stable-${KUBECTL_STABLE_VERSION}.txt")/bin/linux/${TARGETARCH}/kubectl && \
   chmod +x /usr/local/bin/kubectl
 
 # Download kubectx and kubens utilities
 # https://github.com/ahmetb/kubectx
-ENV KUBECTX_VERSION 0.9.5
+ENV KUBECTX_VERSION=0.9.5
 RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubens" \
   && curl -o /utility/kubectx -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubectx" \
   && chmod +x /utility/kubens /utility/kubectx \
@@ -110,7 +110,7 @@ RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/dow
 # Install Krew - kubectl plugin manager
 # https://github.com/kubernetes-sigs/krew/releases
 # https://krew.sigs.k8s.io/docs/user-guide/setup/install/
-ENV KREW_VERSION 0.4.4
+ENV KREW_VERSION=0.4.4
 RUN set -x; cd "$(mktemp -d)" \
   && OS="$(uname | tr '[:upper:]' '[:lower:]')" \
   && ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" \
@@ -120,7 +120,7 @@ RUN set -x; cd "$(mktemp -d)" \
   && rm "${KREW}.tar.gz" \
   && ./"${KREW}" install krew
 
-ENV PATH "/root/.krew/bin:$PATH"
+ENV PATH="/root/.krew/bin:$PATH"
 
 # Install kube-capacity using krew https://github.com/robscott/kube-capacity
 RUN kubectl krew install resource-capacity && \
@@ -128,7 +128,7 @@ RUN kubectl krew install resource-capacity && \
   kubectl krew install community-images
 
 # Make krew directory executable
-RUN chmod +x /root && chmod -R 755 /root/.krew/store
+RUN chmod 755 /root && chmod -R 755 /root/.krew
 
 # Copy helm from previous stage
 COPY --from=build /usr/local/bin/helm /usr/local/bin/helm
@@ -148,7 +148,7 @@ RUN chmod +x /utility/kubens.patched
 RUN ln -s /utility/kubens.patched /usr/local/bin/kubens
 
 # Create userless home, it will be used only for cache
-ENV HOME /cloud-tools-cli
+ENV HOME=/cloud-tools-cli
 RUN mkdir /cloud-tools-cli \
   && chmod 777 /cloud-tools-cli
 
@@ -167,7 +167,8 @@ RUN touch /etc/profile.d/tools-completion.sh \
   && echo "source <(kubectl completion bash)" >> /etc/profile.d/tools-completion.sh \
   && echo "alias k=\"kubectl\"" >> /etc/profile.d/tools-completion.sh \
   && echo "complete -o default -F __start_kubectl k" >> /etc/profile.d/tools-completion.sh \
-  && echo "export PATH=\"/root/.krew/bin:$PATH\"" >> /etc/profile.d/tools-completion.sh \
+  && echo "export PATH=\"${PATH}\"" >> /etc/profile.d/tools-completion.sh \
+  && echo "alias kube-capacity=\"kubectl resource-capacity\"" >> /etc/profile.d/tools-completion.sh \
   && echo "source <(helm completion bash)" >> /etc/profile.d/tools-completion.sh \
   && echo "source <(stern --completion bash)" >> /etc/profile.d/tools-completion.sh \
   && echo "source /google-cloud-sdk/path.bash.inc" >> /etc/profile.d/tools-completion.sh \
