@@ -26,7 +26,7 @@ RUN apk --no-cache add autoconf automake build-base curl gzip libtool make opens
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION=3.15.2
+ENV HELM_VERSION=3.15.4
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L0 "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
@@ -123,12 +123,16 @@ RUN set -x; cd "$(mktemp -d)" \
 ENV PATH="/root/.krew/bin:$PATH"
 
 # Install kube-capacity using krew https://github.com/robscott/kube-capacity
-RUN kubectl krew install resource-capacity && \
+RUN kubectl krew install resource-capacity \
   # Install community-images using krew https://github.com/kubernetes-sigs/community-images#kubectl-community-images
-  kubectl krew install community-images
+  && kubectl krew install community-images
 
 # Make krew directory executable
 RUN chmod 755 /root && chmod -R 755 /root/.krew
+
+# Grant permissions to the /usr/local/bin directory to allow standard users to manipulate kubens.
+# See docker-entrypoint.sh in 'Using original kubens' feature.
+RUN chmod 777 /usr/local/bin
 
 # Copy helm from previous stage
 COPY --from=build /usr/local/bin/helm /usr/local/bin/helm
@@ -160,6 +164,10 @@ RUN mkdir -p /cloud-tools-cli/dotfiles
 ENV PROMPT_COMMAND=prompter
 COPY scripts/prompter.sh /etc/profile.d/prompter.sh
 RUN chmod +x /etc/profile.d/prompter.sh
+
+# Add bash functions
+COPY scripts/bash_functions.sh /etc/profile.d/bash_functions.sh
+RUN chmod +x /etc/profile.d/bash_functions.sh
 
 # Final settings
 RUN touch /etc/profile.d/tools-completion.sh \
