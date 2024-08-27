@@ -5,13 +5,14 @@
 # You can find the list of the available image tags here:
 # https://console.cloud.google.com/gcr/images/google.com:cloudsdktool/EU/google-cloud-cli
 
-GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 483.0.0-alpine
+GOOGLE_CLOUD_CLI_IMAGE_TAG ?= 489.0.0-alpine
 IMAGE_NAME ?= sparkfabrik/cloud-tools
 IMAGE_TAG ?= latest
 
 cloud-tools: build-docker-image
 	@touch .env
 	@docker run --rm \
+		-u $(shell id -u):$(shell id -g) \
 		-v ${PWD}/dotfiles:/cloud-tools-cli/dotfiles \
 		-v ~/.config/gcloud:/cloud-tools-cli/.config/gcloud \
 		-w /mnt \
