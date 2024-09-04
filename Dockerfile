@@ -1,6 +1,6 @@
 # AWS CLI v2
 ARG AWS_CLI_VERSION=2.17.7
-ARG ALPINE_VERSION=3.20
+ARG ALPINE_VERSION=3.19
 
 # To fetch the right alpine version use:
 # docker run --rm --entrypoint ash eu.gcr.io/google.com/cloudsdktool/google-cloud-cli:${GOOGLE_CLOUD_CLI_IMAGE_TAG} -c 'cat /etc/issue'
