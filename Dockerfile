@@ -1,5 +1,5 @@
 # AWS CLI v2
-ARG AWS_CLI_VERSION=2.17.7
+ARG AWS_CLI_VERSION=2.17.44
 ARG ALPINE_VERSION=3.19
 
 # To fetch the right alpine version use:
