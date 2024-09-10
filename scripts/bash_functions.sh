@@ -23,6 +23,8 @@ function print-basic-auth() {
       echo "No auth secret found for ingress ${INGRESS} (${FIRST_HOST})"
       continue
     fi
+    # Remove the prefix from the secret name, if it is present
+    SECRET="$(echo "${SECRET}" | cut -d"/" -f1)"
     USERNAME=$(kubectl --namespace "${CURRENT_NAMESPACE}" get secret "${SECRET}" -o jsonpath="{.data.username}" | base64 -d)
     PASSWORD=$(kubectl --namespace "${CURRENT_NAMESPACE}" get secret "${SECRET}" -o jsonpath="{.data.password}" | base64 -d)
     if [ -z "${USERNAME}" ] || [ -z "${PASSWORD}" ]; then
