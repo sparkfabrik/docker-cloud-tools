@@ -70,7 +70,17 @@ if [ "${CLUSTER_TYPE}" = "GKE" ]; then
           export CLUSTER_NAME
           export KUBECONFIG="/tmp/${CLUSTER_NAME}_kubeconfig"
           echo "export CLUSTER_NAME=\"${CLUSTER_NAME}\"" >>"${ADDITIONAL_ENV_FILE}"
-          gcloud container clusters get-credentials "${CLUSTER_NAME}" --project "${GCP_PROJECT}" --zone "${CLUSTER_LOCATION}"
+
+          # Verify if the cluster use DNS endpoint to connect to the control plane
+          # and set the DNS_ENDPOINT_OPT variable to use it
+          DNS_ENDPOINT_OPT=""
+          CLUSTER_INFO=$(gcloud container clusters describe "${CLUSTER_NAME}" --project "${CLOUDSDK_CORE_PROJECT}" --zone "${CLUSTER_LOCATION}" --format=json)
+          CONTROL_PLANE_ALLOW_EXTERNAL_DNS=$(echo "${CLUSTER_INFO}" | jq -r '.controlPlaneEndpointsConfig.dnsEndpointConfig.allowExternalTraffic')
+          if [ "${CONTROL_PLANE_ALLOW_EXTERNAL_DNS}" = "true" ]; then
+            DNS_ENDPOINT_OPT="--dns-endpoint"
+          fi
+
+          gcloud container clusters get-credentials "${CLUSTER_NAME}" --project "${GCP_PROJECT}" --zone "${CLUSTER_LOCATION}" ${DNS_ENDPOINT_OPT}
           EXIT_CONF_KUBECONFIG=$?
           if [ "${EXIT_CONF_KUBECONFIG}" -eq 0 ]; then
             readSecret
