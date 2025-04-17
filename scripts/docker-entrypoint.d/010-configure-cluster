@@ -74,7 +74,7 @@ if [ "${CLUSTER_TYPE}" = "GKE" ]; then
           # Verify if the cluster use DNS endpoint to connect to the control plane
           # and set the DNS_ENDPOINT_OPT variable to use it
           DNS_ENDPOINT_OPT=""
-          CLUSTER_INFO=$(gcloud container clusters describe "${CLUSTER_NAME}" --project "${CLOUDSDK_CORE_PROJECT}" --zone "${CLUSTER_LOCATION}" --format=json)
+          CLUSTER_INFO=$(gcloud container clusters describe "${CLUSTER_NAME}" --project "${GCP_PROJECT}" --zone "${CLUSTER_LOCATION}" --format=json)
           CONTROL_PLANE_ALLOW_EXTERNAL_DNS=$(echo "${CLUSTER_INFO}" | jq -r '.controlPlaneEndpointsConfig.dnsEndpointConfig.allowExternalTraffic')
           if [ "${CONTROL_PLANE_ALLOW_EXTERNAL_DNS}" = "true" ]; then
             DNS_ENDPOINT_OPT="--dns-endpoint"
