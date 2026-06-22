@@ -1,5 +1,5 @@
 # AWS CLI v2
-ARG AWS_CLI_VERSION=2.25.6
+ARG AWS_CLI_VERSION=2.33.2
 ARG ALPINE_VERSION=3.20
 
 # To fetch the right alpine version use:
@@ -26,26 +26,26 @@ RUN apk --no-cache add autoconf automake build-base curl gzip libtool make opens
 
 # Download helm
 # https://github.com/helm/helm/releases
-ENV HELM_VERSION=3.17.3
+ENV HELM_VERSION=3.21.2
 RUN curl -o /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -L "https://get.helm.sh/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/helm-v${HELM_VERSION}-linux-${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/linux-${TARGETARCH}/helm /usr/local/bin/helm
 
 # Download stern
 # https://github.com/stern/stern/releases
-ENV STERN_VERSION=1.32.0
+ENV STERN_VERSION=1.34.0
 RUN curl -o /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -L "https://github.com/stern/stern/releases/download/v${STERN_VERSION}/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz" \
   && tar -zxvf /tmp/stern_${STERN_VERSION}_linux_${TARGETARCH}.tar.gz -C /tmp \
   && mv /tmp/stern /usr/local/bin/stern
 
 # Download jq
 # https://github.com/jqlang/jq/releases
-ENV JQ_VERSION=1.7.1
-RUN curl -o /tmp/jq-${JQ_VERSION}.tar.gz -L "https://github.com/stedolan/jq/archive/refs/tags/jq-${JQ_VERSION}.tar.gz" \
+ENV JQ_VERSION=1.8.2
+RUN curl -o /tmp/jq-${JQ_VERSION}.tar.gz -L "https://github.com/jqlang/jq/archive/refs/tags/jq-${JQ_VERSION}.tar.gz" \
   && tar -zxvf /tmp/jq-${JQ_VERSION}.tar.gz -C /tmp
 
-# https://github.com/kkos/oniguruma/tree/v6.9.9
-ENV ONIGURUMA_VERSION=6.9.9
+# https://github.com/kkos/oniguruma/tree/v6.9.10
+ENV ONIGURUMA_VERSION=6.9.10
 RUN curl -o /tmp/oniguruma-${ONIGURUMA_VERSION}.tar.gz -L "https://github.com/kkos/oniguruma/archive/refs/tags/v${ONIGURUMA_VERSION}.tar.gz" \
   && tar -zxvf /tmp/oniguruma-${ONIGURUMA_VERSION}.tar.gz -C /tmp
 
@@ -91,15 +91,15 @@ RUN ln -s /usr/local/aws-cli/v2/current/bin/aws /usr/local/bin/aws \
   && ln -s /usr/local/aws-cli/v2/current/bin/aws_completer /usr/local/bin/aws_completer
 
 # Download kubectl
-# https://console.cloud.google.com/storage/browser/kubernetes-release/release
-ENV KUBECTL_STABLE_VERSION=1.31
+# https://kubernetes.io/releases/download/#binaries
+ENV KUBECTL_STABLE_VERSION=1.34
 RUN echo "Installing kubectl using the stable version of ${KUBECTL_STABLE_VERSION}..." && \
-  curl -so /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/$(curl -L -s "https://storage.googleapis.com/kubernetes-release/release/stable-${KUBECTL_STABLE_VERSION}.txt")/bin/linux/${TARGETARCH}/kubectl && \
+  curl -so /usr/local/bin/kubectl https://dl.k8s.io/release/$(curl -L -s "https://dl.k8s.io/release/stable-${KUBECTL_STABLE_VERSION}.txt")/bin/linux/${TARGETARCH}/kubectl && \
   chmod +x /usr/local/bin/kubectl
 
 # Download kubectx and kubens utilities
-# https://github.com/ahmetb/kubectx
-ENV KUBECTX_VERSION=0.9.5
+# https://github.com/ah metb/kubectx
+ENV KUBECTX_VERSION=0.11.0
 RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubens" \
   && curl -o /utility/kubectx -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubectx" \
   && chmod +x /utility/kubens /utility/kubectx \
@@ -110,7 +110,7 @@ RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/dow
 # Install Krew - kubectl plugin manager
 # https://github.com/kubernetes-sigs/krew/releases
 # https://krew.sigs.k8s.io/docs/user-guide/setup/install/
-ENV KREW_VERSION=0.4.5
+ENV KREW_VERSION=0.5.0
 RUN set -x; cd "$(mktemp -d)" \
   && OS="$(uname | tr '[:upper:]' '[:lower:]')" \
   && ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" \
