@@ -2,6 +2,7 @@
 
 function print-basic-auth() {
   local CURRENT_NAMESPACE INGRESS FIRST_HOST SECRET USERNAME PASSWORD
+  local SERVICE SELECTOR POD ENV_USER ENV_PASS
 
   CURRENT_NAMESPACE="${1:-}"
   # If no namespace is provided, try to get the current one
@@ -20,7 +21,36 @@ function print-basic-auth() {
     # We can't use the jsonpath directly because the 'auth-secret' annotation could be prefixed with custom prefix.
     SECRET="$(kubectl --namespace "${CURRENT_NAMESPACE}" get ingress "${INGRESS}" -o yaml | grep "ingress.kubernetes.io/auth-secret:" | awk '{print $2}')"
     if [ -z "${SECRET}" ]; then
-      echo "No auth secret found for ingress ${INGRESS} (${FIRST_HOST})"
+      # No auth-secret annotation: the ingress is not configured for basic auth at the
+      # ingress level. Fall back to inspecting the served service's pods, which may
+      # implement basic auth themselves via the NGINX_BASIC_AUTH_* env vars.
+      SERVICE="$(kubectl --namespace "${CURRENT_NAMESPACE}" get ingress "${INGRESS}" -o jsonpath='{.spec.rules[0].http.paths[0].backend.service.name}')"
+      if [ -z "${SERVICE}" ]; then
+        echo "No auth secret and no backend service found for ingress ${INGRESS} (${FIRST_HOST})"
+        continue
+      fi
+
+      # Build a label selector from the service's selector map and resolve a Running pod.
+      SELECTOR="$(kubectl --namespace "${CURRENT_NAMESPACE}" get service "${SERVICE}" -o json | jq -r '.spec.selector | to_entries | map("\(.key)=\(.value)") | join(",")')"
+      if [ -z "${SELECTOR}" ]; then
+        echo "No auth secret and no selector on service ${SERVICE} (${INGRESS} - ${FIRST_HOST})"
+        continue
+      fi
+      POD="$(kubectl --namespace "${CURRENT_NAMESPACE}" get pods -l "${SELECTOR}" --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}')"
+      if [ -z "${POD}" ]; then
+        echo "No auth secret and no running pod for service ${SERVICE} (${INGRESS} - ${FIRST_HOST})"
+        continue
+      fi
+
+      # Read the env vars from inside the pod so that values sourced via valueFrom
+      # (secretKeyRef/configMapKeyRef) are resolved too. printenv exits non-zero when unset.
+      ENV_PASS="$(kubectl --namespace "${CURRENT_NAMESPACE}" exec "${POD}" -- printenv NGINX_BASIC_AUTH_PASS 2>/dev/null)"
+      if [ -z "${ENV_PASS}" ]; then
+        echo "No basic auth configured for ingress ${INGRESS} (${FIRST_HOST})"
+        continue
+      fi
+      ENV_USER="$(kubectl --namespace "${CURRENT_NAMESPACE}" exec "${POD}" -- printenv NGINX_BASIC_AUTH_USER 2>/dev/null)"
+      echo "Auth credentials for ingress ${INGRESS} (${FIRST_HOST}): ${ENV_USER:-admin} / ${ENV_PASS} (from service ${SERVICE} pod ${POD})"
       continue
     fi
     # Remove the prefix from the secret name, if it is present
