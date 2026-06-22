@@ -51,9 +51,8 @@ RUN curl -o /tmp/oniguruma-${ONIGURUMA_VERSION}.tar.gz -L "https://github.com/kk
 
 # Compile JQ
 RUN cd /tmp/jq-jq-${JQ_VERSION} \
-  && rm -rf modules/oniguruma \
-  && mkdir -p modules \
-  && mv /tmp/oniguruma-${ONIGURUMA_VERSION} /tmp/jq-jq-${JQ_VERSION}/modules/oniguruma \
+  && rm -rf vendor/oniguruma \
+  && mv /tmp/oniguruma-${ONIGURUMA_VERSION} /tmp/jq-jq-${JQ_VERSION}/vendor/oniguruma \
   && autoreconf -fi \
   && ./configure --with-oniguruma=builtin --disable-maintainer-mode \
   && make LDFLAGS=-all-static -j4 \
