@@ -2,7 +2,7 @@
 
 function print-basic-auth() {
   local CURRENT_NAMESPACE INGRESS FIRST_HOST SECRET USERNAME PASSWORD
-  local SERVICE SELECTOR POD ENV_USER ENV_PASS
+  local SERVICE SERVICE_JSON SELECTOR POD ENV_USER ENV_PASS
 
   CURRENT_NAMESPACE="${1:-}"
   # If no namespace is provided, try to get the current one
@@ -30,10 +30,17 @@ function print-basic-auth() {
         continue
       fi
 
-      # Build a label selector from the service's selector map and resolve a Running pod.
-      SELECTOR="$(kubectl --namespace "${CURRENT_NAMESPACE}" get service "${SERVICE}" -o json | jq -r '.spec.selector | to_entries | map("\(.key)=\(.value)") | join(",")')"
+      # Fetch the service once so we can distinguish "not found" from "no selector".
+      SERVICE_JSON="$(kubectl --namespace "${CURRENT_NAMESPACE}" get service "${SERVICE}" -o json 2>/dev/null)"
+      if [ -z "${SERVICE_JSON}" ]; then
+        echo "No auth secret and backend service ${SERVICE} not found (${INGRESS} - ${FIRST_HOST})"
+        continue
+      fi
+      # Build a label selector from the service's selector map. '// {}' keeps jq quiet for
+      # services without a selector (e.g. ExternalName), so SELECTOR ends up empty cleanly.
+      SELECTOR="$(echo "${SERVICE_JSON}" | jq -r '.spec.selector // {} | to_entries | map("\(.key)=\(.value)") | join(",")')"
       if [ -z "${SELECTOR}" ]; then
-        echo "No auth secret and no selector on service ${SERVICE} (${INGRESS} - ${FIRST_HOST})"
+        echo "No auth secret and service ${SERVICE} has no selector, cannot inspect pods (${INGRESS} - ${FIRST_HOST})"
         continue
       fi
       POD="$(kubectl --namespace "${CURRENT_NAMESPACE}" get pods -l "${SELECTOR}" --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}')"
