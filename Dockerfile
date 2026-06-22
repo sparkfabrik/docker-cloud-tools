@@ -98,7 +98,7 @@ RUN echo "Installing kubectl using the stable version of ${KUBECTL_STABLE_VERSIO
   chmod +x /usr/local/bin/kubectl
 
 # Download kubectx and kubens utilities
-# https://github.com/ah metb/kubectx
+# https://github.com/ahmetb/kubectx
 ENV KUBECTX_VERSION=0.11.0
 RUN curl -o /utility/kubens -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubens" \
   && curl -o /utility/kubectx -sLO "https://github.com/ahmetb/kubectx/releases/download/v${KUBECTX_VERSION}/kubectx" \
